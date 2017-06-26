@@ -1,0 +1,26 @@
+{
+    "name": "antiphp/collection",
+    "description": "Library to handle multiple instances of the same class as collection, list or set",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Christian Reinecke",
+            "email": "christian.reinecke@web.de"
+        }
+    ],
+    "license": "MIT",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Antiphp\\Collection\\": "src/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "6.*"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Antiphp\\CollectionTests\\": "tests/"
+        }
+    }
+}
