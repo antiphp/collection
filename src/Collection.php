@@ -6,11 +6,18 @@ namespace Antiphp\Collection;
 
 use Antiphp\Collection\Exception\InvalidArgumentException;
 
-abstract class Collection implements \IteratorAggregate, \Countable
+abstract class Collection implements CollectionInterface, \IteratorAggregate, \Countable
 {
+    /**
+     * @var array
+     */
     private $elements = [];
 
-    abstract public function accept(ElementInterface $element);
+    /**
+     * @param ElementInterface $element
+     * @return bool
+     */
+    abstract public function accept(ElementInterface $element): bool;
 
     /**
      * @param ElementInterface $element
@@ -18,16 +25,16 @@ abstract class Collection implements \IteratorAggregate, \Countable
      */
     public function add(ElementInterface $element): bool
     {
-        $this->verify($element);
+        $this->checkAccept($element);
         $this->elements[] = $element;
         return true;
     }
 
     /**
-     * @param Collection $collection
+     * @param iterable $collection
      * @return bool added all
      */
-    public function addAll(Collection $collection): bool
+    public function addAll(iterable $collection): bool
     {
         foreach ($collection as $element) {
             $this->add($element);
@@ -41,15 +48,15 @@ abstract class Collection implements \IteratorAggregate, \Countable
      */
     public function contains(ElementInterface $element): bool
     {
-        $this->verify($element);
-        return array_search($element, $this->elements, true) !== false;
+        $this->checkAccept($element);
+        return in_array($element, $this->elements, true);
     }
 
     /**
-     * @param Collection $collection
+     * @param iterable $collection
      * @return bool contains all
      */
-    public function containsAll(Collection $collection): bool
+    public function containsAll(iterable $collection): bool
     {
         foreach ($collection as $element) {
             if (!$this->contains($element)) {
@@ -65,7 +72,7 @@ abstract class Collection implements \IteratorAggregate, \Countable
      */
     public function remove(ElementInterface $element): bool
     {
-        $this->verify($element);
+        $this->checkAccept($element);
         $position = array_search($element, $this->elements, true);
         $removed = $position !== false;
         if ($removed) {
@@ -75,25 +82,41 @@ abstract class Collection implements \IteratorAggregate, \Countable
     }
 
     /**
-     * @param Collection $collection
+     * @param iterable $collection
      * @return bool has changed
      */
-    public function removeAll(Collection $collection): bool
+    public function removeAll(iterable $collection): bool
     {
+        if ($collection instanceof \Traversable) {
+            $collection = iterator_to_array($collection);
+        }
+        /** @var array $collection */
+        $elements = array_diff($this->elements, $collection);
+        $removedAny = $elements !== $this->elements;
+        $this->elements = $elements;
+        /*
         $removedAny = false;
         foreach ($collection as $element) {
             $removed = $this->remove($element);
             $removedAny = $removed || $removedAny;
         }
+        */
         return $removedAny;
     }
 
     /**
-     * @param Collection $collection
+     * @param iterable $collection
      * @return bool has changed
      */
-    public function retainAll(Collection $collection): bool
+    public function retainAll(iterable $collection): bool
     {
+        if ($collection instanceof \Traversable) {
+            $collection = iterator_to_array($collection);
+        }
+        $elements = array_intersect($this->elements, $collection);
+        $removedAny = $elements !== $this->elements;
+        $this->elements = $elements;
+        /*
         $removedAny = false;
         foreach ($this as $element) {
             if (!$collection->contains($element)) {
@@ -101,6 +124,7 @@ abstract class Collection implements \IteratorAggregate, \Countable
                 $removedAny = $removed || $removedAny;
             }
         }
+        */
         return $removedAny;
     }
 
@@ -125,7 +149,7 @@ abstract class Collection implements \IteratorAggregate, \Countable
      */
     public function toArray(): array
     {
-        return $this->elements;
+        return array_values($this->elements);
     }
 
     /**
@@ -133,7 +157,8 @@ abstract class Collection implements \IteratorAggregate, \Countable
      */
     public function getIterator(): \Iterator
     {
-        return new \ArrayIterator($this->elements);
+        // prefer toArray() over $this->elements to make inheritance easier
+        return new \ArrayIterator($this->toArray());
     }
 
     /**
@@ -148,7 +173,7 @@ abstract class Collection implements \IteratorAggregate, \Countable
      * @throws \InvalidArgumentException
      * @param ElementInterface $element
      */
-    protected function verify(ElementInterface $element): void
+    protected function checkAccept(ElementInterface $element): void
     {
         if (!$this->accept($element)) {
             throw InvalidArgumentException::create($element);
