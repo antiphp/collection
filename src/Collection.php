@@ -6,7 +6,7 @@ namespace Antiphp\Collection;
 
 use Antiphp\Collection\Exception\InvalidArgumentException;
 
-abstract class Collection implements CollectionInterface, \IteratorAggregate, \Countable
+class Collection implements CollectionInterface, \IteratorAggregate, \Countable
 {
     /**
      * @var array
@@ -17,7 +17,10 @@ abstract class Collection implements CollectionInterface, \IteratorAggregate, \C
      * @param ElementInterface $element
      * @return bool
      */
-    abstract public function accept(ElementInterface $element): bool;
+    public function accept(ElementInterface $element): bool
+    {
+        return true;
+    }
 
     /**
      * @param ElementInterface $element

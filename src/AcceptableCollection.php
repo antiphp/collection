@@ -4,7 +4,7 @@
  */
 namespace Antiphp\Collection;
 
-class AcceptableCollection implements AcceptableCollectionInterface, \Traversable, \Countable
+class AcceptableCollection extends Collection implements AcceptableCollectionInterface, \Traversable, \Countable
 {
     /**
      * @var callable
@@ -40,6 +40,4 @@ class AcceptableCollection implements AcceptableCollectionInterface, \Traversabl
         }
         return $this->acceptable;
     }
-
-
 }

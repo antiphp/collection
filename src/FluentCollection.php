@@ -134,9 +134,6 @@ class FluentCollection implements FluentCollectionInterface, \Traversable, \Coun
      */
     private function getCollection(): CollectionInterface
     {
-        // might be an overkill to call everytime instead of initalizing in constructor
-        // but I want to avoid parent::__construct() calls when inheritance is used
-
         if ($this->collection === null) {
             $this->collection = new AcceptableCollection();
         }

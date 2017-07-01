@@ -6,58 +6,54 @@ namespace Antiphp\Collection;
 
 use Antiphp\Collection\Exception\InvalidArgumentException;
 
-abstract class ImmutableCollection implements CollectionInterface, \Traversable, \Countable
+class ImmutableCollection implements ImmutableCollectionInterface, \Traversable, \Countable
 {
     /**
-     * @var array
+     * @var CollectionInterface
      */
-    private $elements = [];
+    private $mutableCollection;
+
+    /**
+     * ImmutableCollection constructor.
+     * @param iterable $collection
+     */
+    public function __construct(iterable $collection = [])
+    {
+        $this->mutableCollection = new Collection();
+        $this->mutableCollection->addAll($collection);
+    }
 
     /**
      * @param ElementInterface $element
      * @return bool
      */
-    abstract public function accept(ElementInterface $element): bool;
-
-    /**
-     * @param ElementInterface $element
-     * @return ImmutableCollection
-     */
-    public function add(ElementInterface $element): ImmutableCollection
+    public function accept(ElementInterface $element): bool
     {
-        $clone = new static();
-        $clone->elements = $this->createMutableCopy()->add($element)->toArray();
-        return $clone;
+        return $this->mutableCollection->accept($element);
     }
 
     /**
-     * @return FluentCollection
+     * @param ElementInterface $element
+     * @return ImmutableCollectionInterface
      */
-    protected function createMutableCopy(): FluentCollection
+    public function add(ElementInterface $element): ImmutableCollectionInterface
     {
-        $collection = new FluentAcceptableCollection();
-        $collection->addAll($this->toArray());
-        $collection->setAcceptable(function(ElementInterface $element) {
-            $this->checkAccept($element);
-        });
-        return $collection;
+        $clone = clone $this->mutableCollection;
+        $clone->add($element);
+
+        return new ImmutableCollection($clone->toArray());
     }
 
     /**
      * @param iterable $collection
-     * @return ImmutableCollection
+     * @return ImmutableCollectionInterface
      */
-    public function addAll(iterable $collection): ImmutableCollection
+    public function addAll(iterable $collection): ImmutableCollectionInterface
     {
-        $elements = $this->elements;
-        foreach ($collection as $element) {
-            $this->checkAccept($element);
-            $elements[] = $element;
-        }
+        $clone = clone $this->mutableCollection;
+        $clone->addAll($collection);
 
-        $clone = clone $this;
-        $clone->elements = $elements;
-        return $clone;
+        return new ImmutableCollection($clone->toArray());
     }
 
     /**
@@ -66,8 +62,7 @@ abstract class ImmutableCollection implements CollectionInterface, \Traversable,
      */
     public function contains(ElementInterface $element): bool
     {
-        $this->checkAccept($element);
-        return in_array($element, $this->elements, true);
+        return $this->mutableCollection->contains($element);
     }
 
     /**
@@ -76,77 +71,83 @@ abstract class ImmutableCollection implements CollectionInterface, \Traversable,
      */
     public function containsAll(iterable $collection): bool
     {
-        foreach ($collection as $element) {
-            if (!$this->contains($element)) {
-                return false;
-            }
-        }
-        return true;
+        return $this->mutableCollection->containsAll($collection);
     }
 
     /**
      * @param ElementInterface $element
-     * @return ImmutableCollection
+     * @return ImmutableCollectionInterface
      */
-    public function remove(ElementInterface $element): ImmutableCollection
+    public function remove(ElementInterface $element): ImmutableCollectionInterface
     {
-        $this->checkAccept($element);
+        $clone = clone $this->mutableCollection;
+        $clone->remove($element);
 
-        $elements = $this->elements;
-        $position = array_search($element, $elements, true);
-        if ($position !== false) {
-            unset($elements[$position]);
-        }
-        $clone = clone $this;
-        $clone->elements = $elements;
-        return $clone;
+        return new ImmutableCollection($clone->toArray());
     }
 
     /**
      * @param iterable $collection
-     * @return ImmutableCollection
+     * @return ImmutableCollectionInterface
      */
-    public function removeAll(iterable $collection): ImmutableCollection
+    public function removeAll(iterable $collection): ImmutableCollectionInterface
     {
-        $collection = $this->elements;
-        foreach ($collection as $element) {
-            $position = array_search($element, $collection, true);
-            if ($position !== false) {
-                unset($collection[$position]);
-            }
-        }
-        $clone = clone $this;
-        $clone->elements = $collection;
-        return $clone;
+        $clone = clone $this->mutableCollection;
+        $clone->removeAll($collection);
+
+        return new ImmutableCollection($clone->toArray());
     }
 
-    public function retainAll(Collection $collection): bool
+    /**
+     * @param iterable $collection
+     * @return ImmutableCollectionInterface
+     */
+    public function retainAll(iterable $collection): ImmutableCollectionInterface
     {
+        $clone = clone $this->mutableCollection;
+        $clone->retainAll($collection);
+
+        return new ImmutableCollection($clone->toArray());
     }
 
-    public function clear(): void
+    /**
+     * @return ImmutableCollectionInterface
+     */
+    public function clear(): ImmutableCollectionInterface
     {
-        // TODO: Implement clear() method.
+        return new ImmutableCollection();
     }
 
+    /**
+     * @return bool
+     */
     public function isEmpty(): bool
     {
-        // TODO: Implement isEmpty() method.
+        return $this->mutableCollection->isEmpty();
     }
 
+    /**
+     * @return array
+     */
     public function toArray(): array
     {
-        // TODO: Implement toArray() method.
+        return $this->mutableCollection->toArray();
     }
 
+    /**
+     * @return \Iterator
+     */
     public function getIterator(): \Iterator
     {
-        // TODO: Implement getIterator() method.
+        return $this->mutableCollection->getIterator();
     }
 
+    /**
+     * @return int
+     */
     public function count()/*: int */
     {
-        // TODO: Implement count() method.
+        return $this->mutableCollection->count();
     }
 
     /**
